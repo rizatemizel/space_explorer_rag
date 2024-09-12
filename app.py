@@ -15,9 +15,6 @@ st.sidebar.title("API Configuration")
 groq_api_key = st.sidebar.text_input("Enter your GROQ API Key", type="password")
 
 
-
-
-
 # Set up Huggingface embeddings
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
