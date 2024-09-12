@@ -17,7 +17,7 @@ def load_vector_embedding():
             st.session_state.vectors = FAISS.load_local(
                 vector_store_file, embeddings, allow_dangerous_deserialization=True
             )
-        st.success("Vector store is ready. You can start the chat!", icon="✅")
+        st.success("Vector store is ready...", icon="✅")
     else:
         st.error("FAISS vector index file not found! Ensure the file is in the correct location.")
         st.stop()
@@ -98,33 +98,32 @@ with st.sidebar.form(key='api_form'):
 # Handling API Key validation and status
 if not groq_api_key:
     st.sidebar.warning("Please enter your GROQ API key to proceed.")
-    st.stop()  # Stop the app until the user provides the API key
 else:
     st.sidebar.success("API key submitted successfully!", icon="✅")
 
-    # Setting up Huggingface embeddings after the API key is provided
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+# Setting up Huggingface embeddings
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-    # Defining the LLM with GROQ API
-    llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
+# Defining the LLM with GROQ API
+llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
 
-    # Defining the prompt template
-    prompt = ChatPromptTemplate.from_template(
-        """
-        Answer the questions based on the provided context only.
-        Ensure that your answers are as accurate as possible and always provide a reference. 
-        Note that the context is derived from various documents, and these fragments do not originate from a single source. 
-        Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.    
-        <context>
-        {context}
-        <context>
-        Question: {input}
-        """
-    )
+# Defining the prompt template
+prompt = ChatPromptTemplate.from_template(
+    """
+    Answer the questions based on the provided context only.
+    Ensure that your answers are as accurate as possible and always provide a reference. 
+    Note that the context is derived from various documents, and these fragments do not originate from a single source. 
+    Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.    
+    <context>
+    {context}
+    <context>
+    Question: {input}
+    """
+)
 
-    # Load FAISS vectors only after API key is submitted
-    if "vectors" not in st.session_state:
-        load_vector_embedding()
+# Load FAISS vectors when app starts
+if "vectors" not in st.session_state:
+    load_vector_embedding()
 
 # Process user input
 if user_prompt:
