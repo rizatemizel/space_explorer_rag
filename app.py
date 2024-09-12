@@ -98,34 +98,37 @@ with st.sidebar.form(key='api_form'):
 # Handling API Key validation and status
 if not groq_api_key:
     st.sidebar.warning("Please enter your GROQ API key to proceed.")
-    st.stop()
+    st.stop()  # Stop the app until the user provides the API key
 else:
     st.sidebar.success("API key submitted successfully!", icon="✅")
 
-# Setting up Huggingface embeddings
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # Setting up Huggingface embeddings after the API key is provided
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-# Defining the LLM with GROQ API
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
+    # Defining the LLM with GROQ API
+    llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
 
-# Defining the prompt template
-prompt = ChatPromptTemplate.from_template(
-    """
-    Answer the questions based on the provided context only.
-    Ensure that your answers are as accurate as possible and always provide a reference. 
-    Note that the context is derived from various documents, and these fragments do not originate from a single source. 
-    Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.    
-    <context>
-    {context}
-    <context>
-    Question: {input}
-    """
-)
+    # Defining the prompt template
+    prompt = ChatPromptTemplate.from_template(
+        """
+        Answer the questions based on the provided context only.
+        Ensure that your answers are as accurate as possible and always provide a reference. 
+        Note that the context is derived from various documents, and these fragments do not originate from a single source. 
+        Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.    
+        <context>
+        {context}
+        <context>
+        Question: {input}
+        """
+    )
 
-# Load FAISS vectors when app starts
-if "vectors" not in st.session_state:
-    load_vector_embedding()
+    # Load FAISS vectors only after API key is submitted
+    if "vectors" not in st.session_state:
+        load_vector_embedding()
 
 # Process user input
 if user_prompt:
-    query_llm(user_prompt)
+    if not groq_api_key:
+        st.warning("Oops! It seems like you forgot to enter your GROQ API key. If you don't have one, getting it is easy! Please visit [this link](https://console.groq.com/keys) to generate an API key.")
+    else:
+        query_llm(user_prompt)
