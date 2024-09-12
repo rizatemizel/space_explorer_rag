@@ -6,7 +6,6 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
 from langchain_community.vectorstores import FAISS
-
 import time
 
 # Sidebar input for API keys
@@ -14,6 +13,12 @@ st.sidebar.title("API Configuration")
 
 groq_api_key = st.sidebar.text_input("Enter your GROQ API Key", type="password")
 
+# Check if the API key is provided
+if not groq_api_key:
+    st.warning("Please enter your GROQ API key to proceed.")
+    st.stop()
+else:
+    st.success("Thank you for providing the API key! You can now start the chat.")
 
 # Set up Huggingface embeddings
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -26,6 +31,8 @@ prompt = ChatPromptTemplate.from_template(
     """
     Answer the questions based on the provided context only.
     Ensure that your answers are as accurate as possible and always provide a reference. 
+    Note that the context is derived from various documents, and these fragments do not originate from a single source. 
+    Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.    
     <context>
     {context}
     <context>
@@ -48,7 +55,6 @@ st.image("space_image3.jpg")
 
 # Stylized input prompt
 user_prompt = st.text_input("🚀🚀🚀 How can I help you today?")
-
 
 # Function to load the FAISS vector index from the saved file
 def load_vector_embedding():
