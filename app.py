@@ -8,17 +8,34 @@ from langchain.chains import create_retrieval_chain
 from langchain_community.vectorstores import FAISS
 import time
 
-# Sidebar input for API keys
-st.sidebar.title("API Configuration")
+# Streamlit app layout and logic
+st.markdown(
+    """
+    <h1 style='text-align: center; color: #4B9CD3; font-family: Arial, sans-serif; font-size: 24px;'>
+    Assistant Tool for <br> 
+    <i>European Cooperation for Space Standardization (ECSS) Publications</i>
+    </h1>
+    """, 
+    unsafe_allow_html=True
+)
 
-groq_api_key = st.sidebar.text_input("Enter your GROQ API Key", type="password")
+st.image("space_image3.jpg")
 
-# Check if the API key is provided
+# Stylized input prompt
+user_prompt = st.text_input("🚀🚀🚀 How can I help you today?")
+
+# Add a submit button for API Key submission
+with st.sidebar.form(key='api_form'):
+    groq_api_key = st.text_input("Enter your GROQ API Key. You can have one from this link: https://console.groq.com/keys", type="password")
+    submit_button = st.form_submit_button(label='Submit')
+    
+    
+# Check if the API key is provided and display status in sidebar
 if not groq_api_key:
-    st.warning("Please enter your GROQ API key to proceed.")
+    st.sidebar.warning("Please enter your GROQ API key to proceed.")
     st.stop()
 else:
-    st.success("Thank you for providing the API key! You can now start the chat.")
+    st.sidebar.success("Thank you for providing the API key! You can now start the chat.", icon="✅")
 
 # Set up Huggingface embeddings
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -40,21 +57,6 @@ prompt = ChatPromptTemplate.from_template(
     """
 )
 
-# Streamlit app layout and logic
-st.markdown(
-    """
-    <h1 style='text-align: center; color: #4B9CD3; font-family: Arial, sans-serif; font-size: 24px;'>
-    Assistant Tool for <br> 
-    <i>European Cooperation for Space Standardization (ECSS) Publications</i>
-    </h1>
-    """, 
-    unsafe_allow_html=True
-)
-
-st.image("space_image3.jpg")
-
-# Stylized input prompt
-user_prompt = st.text_input("🚀🚀🚀 How can I help you today?")
 
 # Function to load the FAISS vector index from the saved file
 def load_vector_embedding():
@@ -67,7 +69,7 @@ def load_vector_embedding():
                 st.session_state.vectors = FAISS.load_local(
                     vector_store_file, embeddings, allow_dangerous_deserialization=True
                 )
-            st.success("Vector store is ready. You can start chat.")
+            st.success("Vector store is ready. You can start chat." , icon="✅")
         else:
             st.error("FAISS vector index file not found! Ensure the file is in the correct location.")
             st.stop()
