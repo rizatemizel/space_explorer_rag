@@ -44,63 +44,83 @@ with st.sidebar.form(key='api_form'):
     groq_api_key = st.text_input("Enter your GROQ API Key. You can have one from this link: https://console.groq.com/keys", type="password")
     submit_button = st.form_submit_button(label='Submit')
 
-# Check if the API key is provided and display status in sidebar
-if not groq_api_key:
-    st.sidebar.warning("Please enter your GROQ API key to proceed.")
-else:
-    st.sidebar.success("Thank you for providing the API key! You can now start the chat.", icon="✅")
-
 # Set up Huggingface embeddings
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-# Define the LLM using GROQ API
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
-
-# Define the prompt template
-prompt = ChatPromptTemplate.from_template(
-    """
-    Answer the questions based on the provided context only.
-    Ensure that your answers are as accurate as possible and always provide a reference. 
-    Note that the context is derived from various documents, and these fragments do not originate from a single source. 
-    Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.
-    When you mention tables or sub sections like 5.8.2.1, it would be very helpful to mention the standard name and number at the end.
-    
-    <context>
-    {context}
-    <context>
-    Question: {input}
-    """
-)
-
 # Function to load the FAISS vector index from the saved file
+@st.cache_resource(show_spinner=False)
 def load_vector_embedding():
     vector_store_file = "faiss_vectors_index_MiniLM"  # Path to saved FAISS index
-
     try:
         if os.path.exists(vector_store_file):
-            with st.spinner("Loading vector database from local storage..."):
-                # Load the saved FAISS vectors from local storage
-                st.session_state.vectors = FAISS.load_local(
-                    vector_store_file, embeddings, allow_dangerous_deserialization=True
-                )
-            st.success("Vector store is ready. ", icon="✅")
+            # Load the saved FAISS vectors from local storage
+            vectors = FAISS.load_local(
+                vector_store_file, embeddings, allow_dangerous_deserialization=True
+            )
+            return vectors
         else:
             st.error("FAISS vector index file not found! Ensure the file is in the correct location.")
-            st.stop()
+            return None
     except Exception as e:
         st.error(f"Failed to load vectors: {str(e)}")
-        st.stop()
+        return None
 
-# Automatically load the FAISS index when the app starts
+# Automatically load the FAISS index in the background
 if "vectors" not in st.session_state:
-    load_vector_embedding()
+    with st.spinner("Loading vector database in the background..."):
+        st.session_state.vectors = load_vector_embedding()
+
+# Check if the API key is provided
+if groq_api_key:
+    try:
+        # Define the LLM using the provided API key
+        llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
+
+        # Test the API key with a dummy query to ensure it's valid
+        test_query = "Test query to validate API key"
+        
+        # Make a small call to test the API key
+        try:
+            # Using the actual method available in ChatGroq class (assumed predict or generate here)
+            # Substitute with actual available method
+            llm_response = llm.predict(test_query)
+
+            # If the call succeeds, show the success message
+            st.sidebar.success("Thank you for providing the API key! You can now start the chat.", icon="✅")
+
+        except Exception as test_error:
+            # If the API key is invalid or the call fails
+            st.sidebar.error("Invalid API key. Please enter a valid key.")
+            st.stop()
+
+        # Define the prompt template
+        prompt = ChatPromptTemplate.from_template(
+            """
+            Answer the questions based on the provided context only.
+            Ensure that your answers are as accurate as possible and always provide a reference. 
+            Note that the context is derived from various documents, and these fragments do not originate from a single source. 
+            Therefore, using a reference such as "Reference: 5.8.2.1" would not be useful as we cannot determine which document this subsection is from.
+            When you mention tables or sub sections like 5.8.2.1, it would be very helpful to mention the standard name and number at the end.
+            
+            <context>
+            {context}
+            <context>
+            Question: {input}
+            """
+        )
+
+    except Exception as e:
+        # If something goes wrong during the LLM setup or validation
+        st.sidebar.error("Invalid API key. Please enter a valid key.")
+        st.stop()
+else:
+    st.sidebar.warning("Please enter your GROQ API key to proceed.")
 
 # If a user prompt is provided, execute the query
 if user_prompt:
-    # Warn the user if the API key is missing
     if not groq_api_key:
         st.warning("Please enter your GROQ API key to submit a query.")
-    elif "vectors" not in st.session_state:
+    elif "vectors" not in st.session_state or st.session_state.vectors is None:
         st.error("FAISS vector database not loaded.")
     else:
         try:
