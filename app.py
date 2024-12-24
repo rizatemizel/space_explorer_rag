@@ -34,7 +34,7 @@ st.markdown(
 # Centering the image using st.columns
 col1, col2, col3 = st.columns([1, 8, 1])  # The middle column will be larger
 with col2:
-    st.image("space_image3.jpg", use_column_width=True)  # Image is centered and scaled within the column
+    st.image("space_image3.jpg", use_column_width="auto")  # Image is centered and scaled within the column
 
 # Stylized input prompt
 user_prompt = st.text_input("🚀🚀🚀 How can I help you today?")
