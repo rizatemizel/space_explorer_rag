@@ -10,7 +10,7 @@ langchain_huggingface
 faiss-cpu
 langchain-chroma
 beautifulsoup4
-streamlit
+streamlit==1.41.1
 langchain_groq
 langchain_core
 pydantic
