@@ -74,7 +74,7 @@ if "vectors" not in st.session_state:
 if groq_api_key:
     try:
         # Define the LLM using the provided API key
-        llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192", temperature=0)
+        llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.3-70b-versatile", temperature=0)
 
         # Test the API key with a dummy query to ensure it's valid
         test_query = "Test query to validate API key"
